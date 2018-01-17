@@ -1,0 +1,18 @@
+#cloud-config
+debconf_selections:
+ maas: |
+  {{for line in str(curtin_preseed).splitlines()}}
+  {{line}}
+  {{endfor}}
+
+block-meta:
+    devices:
+      - /dev/sda
+    boot-partition:
+      - enabled: True
+        format: uefi
+
+late_commands:
+  maas: [wget, '--no-proxy', '{{node_disable_pxe_url}}', '--post-data', '{{node_disable_pxe_data}}', '-O', '/dev/null']
+  40_efi_ubuntu: ["curtin", "in-target", "--", "sh", "-c", "mkdir -p /boot/efi/EFI/ubuntu"]
+  41_efi_ubuntu: ["curtin", "in-target", "--", "sh", "-c", "cp -v /boot/efi/EFI/centos/grubx64.efi /boot/efi/EFI/ubuntu/shimx64.efi"]

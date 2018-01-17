@@ -1,0 +1,3 @@
+- import_playbook: basics.yml
+- import_playbook: maas.yml
+- import_playbook: virtserver.yml

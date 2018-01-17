@@ -1,0 +1,7 @@
+# Ansible
+site.retry
+inventory
+
+# General
+*~
+

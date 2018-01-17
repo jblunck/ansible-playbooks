@@ -1,0 +1,11 @@
+# http://docs.ansible.com/galaxy.html#installing-multiple-roles-from-a-file
+# run `ansible-galaxy install -r requirements.yml` after updating this
+ 
+- src: geerlingguy.ntp
+- src: holms.fqdn
+
+- src: mrlesmithjr.maas
+
+- src: https://github.com/jblunck/ansible-role-libvirtd
+  name: jblunck.libvirtd
+

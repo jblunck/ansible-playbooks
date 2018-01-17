@@ -1,0 +1,9 @@
+- hosts: virtserver
+  become: yes
+  pre_tasks:
+    - name: set libvirtd_remote_key based on public key from maas
+      set_fact: libvirtd_remote_keys="{{ libvirtd_remote_keys + [ hostvars[item]['libvirtd_remote_key'] ] }}"
+      when: hostvars[item]['libvirtd_remote_key'] is defined
+      with_items: "{{ groups.maas }}"
+  roles:
+    - jblunck.libvirtd

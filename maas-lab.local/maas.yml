@@ -1,0 +1,19 @@
+- hosts: maas
+  vars:
+  become: yes
+  roles:
+    - mrlesmithjr.maas
+  tasks:
+    - name: slurp SSH public key
+      slurp: src=/var/lib/maas/.ssh/id_rsa.pub
+      register: result
+    - name: set SSH public key fact
+      set_fact: libvirtd_remote_key="{{ result['content']|b64decode }}"
+      when: not result.failed
+    - name: install curtin preseeds
+      copy:
+        src: "{{ item }}"
+        dest: /etc/maas/preseeds/
+        mode: 0644
+      with_items:
+        - files/curtin_userdata_centos_amd64_generic_centos70

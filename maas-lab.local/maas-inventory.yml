@@ -1,0 +1,70 @@
+- hosts: maas
+  tags:
+    - always
+  vars:
+    maas_login_url: 'http://localhost/MAAS/'
+    maas_login_user: 'admin'
+    maas_login_apikey: ''
+    maas_os_python_interpreter: { 'ubuntu': '/usr/bin/python3' }
+  roles:
+  tasks:
+    - name: Check for local MAAS cli apikey
+      local_action: stat path=files/{{ maas_login_user }}_apikey.enc
+      register: maas_apikey_stat
+      when: maas_login_user != '' and maas_login_apikey == ''
+
+    - name: Load local MAAS cli apikey
+      set_fact: maas_login_apikey={{ lookup('files', 'files/{{ maas_login_user }}_apikey.enc') }}
+      when: not maas_apikey_stat|skipped and maas_apikey_stat.stat.exists
+
+    - name: Capture MAAS cli apikey
+      command: "maas apikey --username={{ maas_login_user }}"
+      become: yes
+      register: maas_apikey_cmd
+      changed_when: false
+      when: maas_login_user != '' and maas_login_apikey == ''
+
+    - name: Login via MAAS cli
+      command: "maas login {{ maas_login_user }} {{ maas_login_url }} {{ maas_login_apikey }}"
+      become: false
+      changed_when: false
+
+    - name: Capturing MAAS machines
+      shell: "maas {{ maas_login_user }} machines read | jq ."
+      register: maas_machines
+      become: false
+      changed_when: false
+
+    - name: Logout via MAAS cli
+      command: "maas logout {{ maas_login_user }}"
+      become: false
+      changed_when: false
+
+    - name: Refreshing inventory
+      meta: refresh_inventory
+
+    - name: Populating dynamic groups for users MAAS machines based on tag names
+      add_host:
+        name: "{{ item.fqdn }}"
+        groups: "maas_machines,{{ item.tag_names | map('regex_replace', '(.*)', 'maas_\\1') | list | join(',') }}"
+        ansible_ssh_host: "{{ item.ip_addresses[0] }}"
+        ansible_ssh_user: "{{ item.osystem }}"
+        ansible_python_interpreter: "{{ maas_os_python_interpreter[item.osystem]|default(omit) }}"
+      changed_when: false
+      when:
+        - item.owner == maas_login_user
+        - item.status|int == 6
+      with_items: "{{ maas_machines['stdout']|from_json }}"
+
+- hosts: all
+  tags:
+    - debug
+  vars:
+  roles:
+  tasks:
+    - name: DEBUG - list of maas_machines
+      debug: msg="{{ item }}"
+      with_inventory_hostnames:
+        - maas_machines
+
+    - debug: msg="{{ group_names }}"

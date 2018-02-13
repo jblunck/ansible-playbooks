@@ -57,10 +57,14 @@ def perform_API_request(server, path, api_key):
 	return requests.get(url, auth=authheader, headers={'Accept': 'application/json,*/*'})
 
 def add_host(d, group, fqdn):
-	if not d.has_key(group):
-		d.update({ group:{ 'hosts':[], 'vars':{}} })
-	d[group]['hosts'].append(fqdn)
-	return d
+
+    # normalize group names
+    group = group.replace(' ', '_').lower()
+
+    if not d.has_key(group):
+        d.update({ group:{ 'hosts':[], 'vars':{}} })
+    d[group]['hosts'].append(fqdn)
+    return d
 
 def add_hostvars(d, fqdn, k, v):
 	if not d.has_key('_meta') or not d['_meta'].has_key('hostvars'):

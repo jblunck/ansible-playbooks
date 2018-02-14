@@ -1,11 +1,34 @@
-MAAS Dynamic Inventory Script
-=============================
+Ansible Dynamic Inventory Script for MAAS
+=========================================
 
 Requirements
 ------------
 ```
 $ pip2 install requests requests_oauthlib
 ```
+
+Configuration
+-------------
+This script assumes an `maas.ini` file in the same path as the script. A different
+path can be defined by the `MAAS_INI_PATH` environment variable.
+
+```
+[DEFAULT]
+# Explicitly set active profile (default: first profile section found).
+# Overridden by environment variable MAAS_PROFILE.
+#profile = prod
+
+[test]
+maas_server = 1.2.3.4
+maas_api_key = <consumer_key>:<token>:<secret>
+
+[prod]
+maas_server = 5.6.7.8
+maas_api_key = <consumer_key>:<token>:<secret>
+```
+
+> **Note:** A user's API key can be obtained from the web interface. Click on
+> 'username' in the top right corner, and select 'Account'.
 
 Usage Examples
 --------------
